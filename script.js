@@ -647,9 +647,16 @@
   }
 
   // ---------- Payload ----------
+  // Escopo interno (IIFE). NÃO é exposta em window — evita acesso via console.
   function buildCustomerPayload() {
-    const nome = (els.nome.value || "").trim();
     const tipo = els.tipoCliente.value;
+    // Validação explícita: sem fallback silencioso para "PF".
+    // Se o tipo for inválido, retorna null e o chamador interrompe o fluxo.
+    if (tipo !== "PF" && tipo !== "PJ") {
+      return null;
+    }
+
+    const nome = (els.nome.value || "").trim();
     const doc = somenteDigitos(els.documento.value);
     const tel = somenteDigitos(els.telefone.value);
     const email = (els.email.value || "").trim();
@@ -658,7 +665,7 @@
 
     return {
       name: nome,
-      customerType: tipo === "PJ" ? "PJ" : "PF",
+      customerType: tipo,
       document: doc,
       phone: tel,
       email: email ? email : null,
@@ -667,9 +674,6 @@
       active: true,
     };
   }
-  // Exposição apenas para conferência manual em desenvolvimento.
-  // Não é invocada espontaneamente.
-  window.buildCustomerPayload = buildCustomerPayload;
 
   // ---------- Estado "salvando" ----------
   function setSalvando(ativo) {
@@ -704,6 +708,16 @@
 
     // Monta o payload em memória local. NÃO há envio para API/banco nesta etapa.
     const _payload = buildCustomerPayload(); // eslint-disable-line no-unused-vars
+    if (!_payload) {
+      // Defesa redundante: se chegou aqui sem tipo válido, interrompe sem
+      // enviar nada e mantém o usuário no formulário com mensagem genérica.
+      definirErro("tipoCliente", "Selecione o tipo de cliente.");
+      mostrarMensagemGlobal(
+        "Não foi possível salvar. Verifique os campos destacados.",
+        "erro"
+      );
+      return;
+    }
 
     setSalvando(true);
 
@@ -790,8 +804,10 @@
   // BOOTSTRAP
   // Ao carregar a página, sempre exibimos a tela de login.
   // Recarregar = voltar ao login (sessão NÃO persiste).
+  // resetarFormularioCompletamente() garante estado consistente do cadastro
+  // antes mesmo da tela ser exibida (evita resquícios em recargas/autopreencher).
   // =============================================================================
   inicializarTema();
-  atualizarContadorObservacoes();
+  resetarFormularioCompletamente();
   mostrarTelaLogin();
 })();

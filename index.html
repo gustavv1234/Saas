@@ -131,7 +131,7 @@
               type="button"
               class="sidebar-item is-em-breve"
               data-modulo="produtos"
-              aria-disabled="true"
+              aria-label="Produtos, módulo em breve"
             >
               <span class="sidebar-item-label">Produtos</span>
               <span class="badge-em-breve" aria-hidden="true">em breve</span>
@@ -142,7 +142,7 @@
               type="button"
               class="sidebar-item is-em-breve"
               data-modulo="estoque"
-              aria-disabled="true"
+              aria-label="Estoque, módulo em breve"
             >
               <span class="sidebar-item-label">Estoque</span>
               <span class="badge-em-breve" aria-hidden="true">em breve</span>
@@ -153,7 +153,7 @@
               type="button"
               class="sidebar-item is-em-breve"
               data-modulo="vendas"
-              aria-disabled="true"
+              aria-label="Vendas, módulo em breve"
             >
               <span class="sidebar-item-label">Vendas</span>
               <span class="badge-em-breve" aria-hidden="true">em breve</span>
@@ -164,7 +164,7 @@
               type="button"
               class="sidebar-item is-em-breve"
               data-modulo="relatorios"
-              aria-disabled="true"
+              aria-label="Relatórios, módulo em breve"
             >
               <span class="sidebar-item-label">Relatórios</span>
               <span class="badge-em-breve" aria-hidden="true">em breve</span>
@@ -175,7 +175,7 @@
               type="button"
               class="sidebar-item is-em-breve"
               data-modulo="configuracoes"
-              aria-disabled="true"
+              aria-label="Configurações, módulo em breve"
             >
               <span class="sidebar-item-label">Configurações</span>
               <span class="badge-em-breve" aria-hidden="true">em breve</span>
@@ -256,11 +256,18 @@
             hidden
           ></div>
 
+          <!--
+            autocomplete="off" no formulário e nos campos com dados pessoais:
+            evita que o navegador memorize/sugira nome, telefone, e-mail e
+            endereço em máquinas compartilhadas da loja. CPF/CNPJ também
+            permanece off. Estes atributos NÃO substituem políticas reais
+            de proteção de dados — apenas reduzem exposição local.
+          -->
           <form
             id="form-cliente"
             class="form-cliente"
             novalidate
-            autocomplete="on"
+            autocomplete="off"
           >
             <fieldset class="form-secao">
               <legend>Dados principais</legend>
@@ -276,7 +283,7 @@
                   maxlength="120"
                   minlength="3"
                   required
-                  autocomplete="name"
+                  autocomplete="off"
                   aria-required="true"
                   aria-describedby="erro-nome"
                 />
@@ -340,7 +347,7 @@
                   maxlength="15"
                   required
                   inputmode="tel"
-                  autocomplete="tel"
+                  autocomplete="off"
                   aria-required="true"
                   aria-describedby="erro-telefone"
                   placeholder="(00) 00000-0000"
@@ -355,7 +362,7 @@
                   id="email"
                   name="email"
                   maxlength="120"
-                  autocomplete="email"
+                  autocomplete="off"
                   aria-describedby="erro-email"
                   placeholder="exemplo@dominio.com"
                 />
@@ -373,7 +380,7 @@
                   id="endereco"
                   name="endereco"
                   maxlength="180"
-                  autocomplete="street-address"
+                  autocomplete="off"
                   aria-describedby="erro-endereco"
                 />
                 <small class="erro-campo" id="erro-endereco" aria-live="polite"></small>
