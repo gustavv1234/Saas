@@ -1,0 +1,32 @@
+# Variáveis de ambiente — NUNCA commitar
+.env
+.env.local
+.env.*.local
+
+# Banco de dados SQLite
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+data/
+
+# Dependências
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build / cache
+dist/
+.cache/
+.prisma/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

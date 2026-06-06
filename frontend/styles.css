@@ -1,0 +1,798 @@
+/* =============================================================================
+   Gestão Autopeças — Design System
+   Redesign completo: Vite · shadcn/ui · Linear · Vercel
+   Tema escuro como padrão · Sidebar sempre escura · Fonte Inter
+   ============================================================================= */
+
+/* ── Reset ─────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Garante que [hidden] funcione mesmo quando a classe define display:flex/grid */
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Variáveis de tema ─────────────────────────────────────────────────────────
+   Tema ESCURO é o padrão (:root).
+   Tema claro via html[data-tema="light"].
+   A sidebar permanece escura em ambos os temas — contraste intencional.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root,
+html[data-tema="dark"] {
+  color-scheme: dark;
+
+  --cor-fundo:              #09090f;
+  --cor-superficie:         #111118;
+  --cor-superficie-alt:     #18181f;
+  --cor-superficie-elev:    #1e1e28;
+
+  --cor-sidebar-bg:         #0d0d14;
+  --cor-sidebar-texto:      #a1a1b5;
+  --cor-sidebar-texto-suave:#52526a;
+  --cor-sidebar-item-hover: rgba(139, 92, 246, 0.08);
+  --cor-sidebar-item-ativo-bg: rgba(139, 92, 246, 0.15);
+  --cor-sidebar-item-ativo-texto: #c4b5fd;
+  --cor-sidebar-borda:      rgba(255, 255, 255, 0.04);
+
+  --cor-borda:              rgba(255, 255, 255, 0.07);
+  --cor-borda-foco:         #8b5cf6;
+
+  --cor-texto:              #e8e8f0;
+  --cor-texto-suave:        #6b6b80;
+
+  --cor-primaria:           #8b5cf6;
+  --cor-primaria-hover:     #7c3aed;
+  --cor-primaria-texto:     #ffffff;
+
+  --cor-secundaria-bg:      rgba(255, 255, 255, 0.06);
+  --cor-secundaria-bg-hover:rgba(255, 255, 255, 0.10);
+  --cor-secundaria-texto:   #e8e8f0;
+
+  --cor-erro:               #f87171;
+  --cor-erro-bg:            rgba(248, 113, 113, 0.08);
+  --cor-sucesso:            #34d399;
+  --cor-sucesso-bg:         rgba(52, 211, 153, 0.08);
+  --cor-aviso:              #fbbf24;
+  --cor-aviso-bg:           rgba(251, 191, 36, 0.08);
+
+  --cor-sombra:             rgba(0, 0, 0, 0.4);
+  --cor-overlay:            rgba(0, 0, 0, 0.7);
+
+  /* Gradientes e efeitos (extras) */
+  --grad-primario:          linear-gradient(135deg, #8b5cf6, #3b82f6);
+  --grad-brand:             linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+  --glow-primario:          0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+html[data-tema="light"] {
+  color-scheme: light;
+
+  --cor-fundo:              #f5f5fa;
+  --cor-superficie:         #ffffff;
+  --cor-superficie-alt:     #f8f8fc;
+  --cor-superficie-elev:    #ffffff;
+
+  /* Sidebar escura mesmo no tema claro */
+  --cor-sidebar-bg:         #0d0d14;
+  --cor-sidebar-texto:      #a1a1b5;
+  --cor-sidebar-texto-suave:#52526a;
+  --cor-sidebar-item-hover: rgba(139, 92, 246, 0.08);
+  --cor-sidebar-item-ativo-bg: rgba(139, 92, 246, 0.15);
+  --cor-sidebar-item-ativo-texto: #c4b5fd;
+  --cor-sidebar-borda:      rgba(255, 255, 255, 0.04);
+
+  --cor-borda:              rgba(0, 0, 0, 0.08);
+  --cor-borda-foco:         #7c3aed;
+
+  --cor-texto:              #1a1a2e;
+  --cor-texto-suave:        #6b6b80;
+
+  --cor-primaria:           #7c3aed;
+  --cor-primaria-hover:     #6d28d9;
+  --cor-primaria-texto:     #ffffff;
+
+  --cor-secundaria-bg:      rgba(0, 0, 0, 0.04);
+  --cor-secundaria-bg-hover:rgba(0, 0, 0, 0.08);
+  --cor-secundaria-texto:   #1a1a2e;
+
+  --cor-erro:               #dc2626;
+  --cor-erro-bg:            rgba(220, 38, 38, 0.06);
+  --cor-sucesso:            #059669;
+  --cor-sucesso-bg:         rgba(5, 150, 105, 0.06);
+  --cor-aviso:              #d97706;
+  --cor-aviso-bg:           rgba(217, 119, 6, 0.06);
+
+  --cor-sombra:             rgba(0, 0, 0, 0.06);
+  --cor-overlay:            rgba(0, 0, 0, 0.5);
+
+  --grad-primario:          linear-gradient(135deg, #7c3aed, #2563eb);
+  --grad-brand:             linear-gradient(135deg, #7c3aed, #2563eb, #059669);
+  --glow-primario:          0 0 20px rgba(124, 58, 237, 0.2);
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ── Acessibilidade ────────────────────────────────────────────────────────── */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--grad-primario);
+  color: #ffffff;
+  padding: 8px 16px;
+  z-index: 200;
+  text-decoration: none;
+  border-radius: 0 0 8px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  left: 8px;
+  top: 8px;
+  outline: 2px solid var(--cor-borda-foco);
+  outline-offset: 2px;
+}
+
+:focus-visible {
+  outline-offset: 2px;
+}
+
+/* =============================================================================
+   TELA DE LOGIN
+   ============================================================================= */
+.tela-login {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--cor-fundo);
+  /* Gradiente radial decorativo — toque de personalidade sem pesar */
+  background-image: radial-gradient(
+    ellipse 80% 50% at 50% -10%,
+    rgba(139, 92, 246, 0.12) 0%,
+    transparent 100%
+  );
+}
+
+.login-top {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 20px;
+}
+
+.login-conteudo {
+  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+/* Sobrescreve o card base com visual específico para login */
+.card.card-login {
+  max-width: 400px;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 0 0 1px var(--cor-borda), 0 8px 40px var(--cor-sombra);
+}
+
+.card-header-login {
+  text-align: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--cor-borda);
+  margin-bottom: 24px;
+}
+
+/* .brand — âncora semântica; .brand-login aplica o visual */
+.brand {
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.brand-login {
+  margin: 0 0 8px 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: var(--grad-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.form-login .campo {
+  margin-bottom: 16px;
+}
+
+.acoes-login {
+  margin-top: 8px;
+  flex-direction: column;
+}
+
+.btn-bloco {
+  width: 100%;
+}
+
+.card-footer-login {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cor-borda);
+  color: var(--cor-texto-suave);
+  text-align: center;
+  font-size: 0.775rem;
+  line-height: 1.6;
+}
+
+/* =============================================================================
+   TELA APP — layout sidebar + conteúdo
+   ============================================================================= */
+.tela-app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-conteudo {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────────────────── */
+.sidebar {
+  width: 256px;
+  background-color: var(--cor-sidebar-bg);
+  color: var(--cor-sidebar-texto);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--cor-sidebar-borda);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.sidebar-brand {
+  padding: 18px 16px 16px;
+  border-bottom: 1px solid var(--cor-sidebar-borda);
+}
+
+.sidebar-brand-texto {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  background: var(--grad-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sidebar-nav {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow-y: auto;
+}
+
+.sidebar-lista {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+}
+
+.sidebar-lista-rodape {
+  border-top: 1px solid var(--cor-sidebar-borda);
+  padding-top: 4px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  /* Margem lateral para o efeito de pill dentro da sidebar */
+  width: calc(100% - 16px);
+  margin: 1px 8px;
+  padding: 9px 12px;
+  background: transparent;
+  color: var(--cor-sidebar-texto);
+  border: none;
+  border-left: none; /* substituído por background — visual mais limpo */
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-item:hover {
+  background-color: var(--cor-sidebar-item-hover);
+}
+
+.sidebar-item:focus-visible {
+  outline: 2px solid var(--cor-borda-foco);
+  outline-offset: -2px;
+}
+
+.sidebar-item.is-active {
+  background-color: var(--cor-sidebar-item-ativo-bg);
+  color: var(--cor-sidebar-item-ativo-texto);
+  font-weight: 600;
+}
+
+.sidebar-item.is-em-breve {
+  color: var(--cor-sidebar-texto-suave);
+  cursor: pointer;
+}
+
+.sidebar-item.is-em-breve:hover {
+  background-color: var(--cor-sidebar-item-hover);
+  color: var(--cor-sidebar-texto);
+}
+
+/* Badge "EM BREVE" — pill roxo */
+.badge-em-breve {
+  font-size: 0.65rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* Botão Sair — vermelho suave para indicar ação destrutiva */
+.sidebar-item-sair {
+  color: #f87171;
+}
+
+.sidebar-item-sair:hover {
+  background-color: rgba(248, 113, 113, 0.08) !important;
+  color: #f87171 !important;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+/* ── Topbar ────────────────────────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  padding: 0 20px;
+  background-color: var(--cor-superficie);
+  border-bottom: 1px solid var(--cor-borda);
+  flex-shrink: 0;
+  /* Blur para quando o conteúdo rola por baixo */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.topbar-titulo {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  flex: 1 1 auto;
+}
+
+.btn-menu {
+  display: none;
+  min-width: auto;
+  padding: 6px 10px;
+  font-size: 1rem;
+}
+
+/* ── Main / Footer ─────────────────────────────────────────────────────────── */
+.app-main {
+  flex: 1 0 auto;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.app-footer {
+  background-color: var(--cor-superficie);
+  border-top: 1px solid var(--cor-borda);
+  color: var(--cor-texto-suave);
+  padding: 12px 20px;
+  text-align: center;
+  font-size: 0.775rem;
+}
+
+/* Aviso módulo em breve */
+.aviso-modulo {
+  background-color: var(--cor-aviso-bg);
+  color: var(--cor-aviso);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* =============================================================================
+   CARD — base compartilhada entre login e cadastro
+   ============================================================================= */
+.card {
+  background-color: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 1px 3px var(--cor-sombra);
+}
+
+.card-header h2 {
+  margin: 0 0 6px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.subtitulo {
+  margin: 0 0 24px 0;
+  color: var(--cor-texto-suave);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* =============================================================================
+   FORMULÁRIO — fieldsets, campos, labels, inputs
+   ============================================================================= */
+
+/* ── Fieldsets ─────────────────────────────────────────────────────────────── */
+.form-secao {
+  border: 1px solid var(--cor-borda);
+  border-radius: 10px;
+  padding: 20px;
+  margin: 0 0 16px 0;
+  background-color: var(--cor-superficie-alt);
+}
+
+/* Legend em uppercase pequeno — hierarquia visual clara */
+.form-secao legend {
+  padding: 0 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--cor-texto-suave);
+}
+
+/* ── Campos ────────────────────────────────────────────────────────────────── */
+.campo {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+.campo:last-child {
+  margin-bottom: 0;
+}
+
+.campo label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  color: var(--cor-texto);
+  margin-bottom: 6px;
+}
+
+.obrigatorio {
+  color: var(--cor-erro);
+  margin-left: 2px;
+}
+
+/* ── Inputs, selects, textareas ────────────────────────────────────────────── */
+.campo input,
+.campo select,
+.campo textarea {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background-color: var(--cor-superficie-alt);
+  color: var(--cor-texto);
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.campo textarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.6;
+}
+
+.campo input::placeholder,
+.campo textarea::placeholder {
+  color: var(--cor-texto-suave);
+  opacity: 0.7;
+}
+
+/* Glow roxo no foco — identidade visual consistente com o primário */
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus {
+  outline: none;
+  border-color: var(--cor-borda-foco);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+  background-color: var(--cor-superficie);
+}
+
+.campo input:disabled,
+.campo select:disabled,
+.campo textarea:disabled {
+  background-color: var(--cor-superficie-alt);
+  color: var(--cor-texto-suave);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.campo.campo-erro input,
+.campo.campo-erro select,
+.campo.campo-erro textarea {
+  border-color: var(--cor-erro);
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.12);
+}
+
+/* ── Mensagens inline de campo ─────────────────────────────────────────────── */
+.ajuda-campo {
+  display: block;
+  margin-top: 5px;
+  color: var(--cor-texto-suave);
+  font-size: 0.775rem;
+}
+
+.erro-campo {
+  display: block;
+  margin-top: 5px;
+  color: var(--cor-erro);
+  font-size: 0.8rem;
+  font-weight: 500;
+  min-height: 1em;
+}
+
+.erro-campo:not(:empty)::before {
+  content: "⚠ ";
+}
+
+.rodape-campo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.contador {
+  color: var(--cor-texto-suave);
+  font-size: 0.775rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.contador.contador-limite {
+  color: var(--cor-erro);
+  font-weight: 600;
+}
+
+/* =============================================================================
+   MENSAGENS GLOBAIS (feedback de ação)
+   ============================================================================= */
+.mensagem-global {
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  line-height: 1.5;
+}
+
+.mensagem-global.tipo-sucesso {
+  background-color: var(--cor-sucesso-bg);
+  color: var(--cor-sucesso);
+  border-color: rgba(52, 211, 153, 0.2);
+}
+
+.mensagem-global.tipo-erro {
+  background-color: var(--cor-erro-bg);
+  color: var(--cor-erro);
+  border-color: rgba(248, 113, 113, 0.2);
+}
+
+/* =============================================================================
+   BOTÕES
+   ============================================================================= */
+.acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 110px;
+  transition: all 0.15s ease;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--cor-borda-foco);
+  outline-offset: 2px;
+}
+
+/* Desabilitado: override em todos os efeitos visuais */
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* Primário: gradiente com glow e elevação no hover */
+.btn-primario {
+  background: var(--grad-primario);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 1px 3px rgba(139, 92, 246, 0.3);
+}
+
+.btn-primario:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: var(--glow-primario);
+  transform: translateY(-1px);
+}
+
+/* Secundário: sutil, borda levemente roxa no hover */
+.btn-secundario {
+  background-color: var(--cor-secundaria-bg);
+  color: var(--cor-secundaria-texto);
+  border-color: var(--cor-borda);
+}
+
+.btn-secundario:hover:not(:disabled) {
+  background-color: var(--cor-secundaria-bg-hover);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+/* Ghost: transparente, uso em contextos sobre superfície */
+.btn-ghost {
+  background-color: transparent;
+  color: var(--cor-texto-suave);
+  border-color: var(--cor-borda);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--cor-secundaria-bg);
+  color: var(--cor-texto);
+}
+
+/* Tema: pill compacto, sem largura mínima */
+.btn-tema {
+  min-width: auto;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  border-radius: 999px;
+  font-weight: 500;
+  color: var(--cor-texto-suave);
+}
+
+.btn-tema:hover:not(:disabled) {
+  color: var(--cor-texto);
+  border-color: rgba(139, 92, 246, 0.4);
+  background-color: var(--cor-secundaria-bg);
+}
+
+/* =============================================================================
+   RESPONSIVIDADE
+   ============================================================================= */
+@media (max-width: 900px) {
+  /* Sidebar em modo drawer: sai da esquerda via slide */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    transform: translateX(-100%);
+    z-index: 50;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .tela-app.sidebar-aberto .sidebar {
+    transform: translateX(0);
+  }
+
+  /* Backdrop de overlay: visível apenas quando sidebar está aberta */
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: var(--cor-overlay);
+    z-index: 40;
+  }
+
+  /* O [hidden] global (display:none !important) oculta o backdrop via JS */
+
+  .btn-menu {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-main {
+    padding: 20px 16px;
+  }
+
+  .card {
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  /* Login card: padding reduzido mas ainda generoso em mobile */
+  .card.card-login {
+    padding: 24px;
+  }
+
+  .acoes {
+    flex-direction: column-reverse;
+  }
+
+  .acoes .btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .login-top {
+    padding: 10px 12px;
+  }
+
+  .brand-login {
+    font-size: 1.5rem;
+  }
+}

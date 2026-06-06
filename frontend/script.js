@@ -1,30 +1,33 @@
 /* =============================================================================
- * Gestão Autopeças — Front-end (login protótipo + cadastro de cliente)
+ * Gestão Autopeças — Front-end
  *
- * SEGURANÇA (princípios aplicados aqui):
- * - Nenhum dado de cliente é persistido em localStorage/sessionStorage/cookies.
- * - Nenhum dado de login (usuário/senha) é persistido em local algum.
- * - localStorage é usado APENAS para a preferência visual de tema.
- * - Nenhum console.log expõe PII completa ou credenciais.
- * - Inserção de texto sempre via textContent / createElement (sem innerHTML).
+ * SEGURANÇA (princípios mantidos):
+ * - Token JWT armazenado APENAS em memória (variável JS) — nunca localStorage.
+ * - Nenhum dado de cliente é persistido no navegador (localStorage/cookies).
+ * - Inserção de texto sempre via textContent / createElement (nunca innerHTML).
  * - Sem eval, sem new Function, sem dependências externas, sem CDN.
- * - Sem fetch / XMLHttpRequest. Nenhuma chamada de rede é feita.
- * - As validações abaixo existem apenas para UX. A validação real DEVE ser
- *   refeita no back-end/API quando essa camada existir.
+ * - Erros técnicos da API nunca são exibidos ao usuário — apenas mensagens genéricas.
+ * - Nenhum console.log expõe credenciais, tokens ou PII completa.
+ * - Token limpo da memória ao fazer logout ou ao detectar expiração (401).
  *
- * IMPORTANTE — login:
- * - Esta tela de login é PROTÓTIPO FRONT-END, não autenticação real.
- * - A autenticação real (senha com hash forte, sessão segura, permissões,
- *   logs, auditoria, bloqueio por tentativas reais, MFA etc.) deverá ser
- *   implementada no back-end no futuro.
- * - As credenciais usadas aqui são apenas para fluxo visual de desenvolvimento.
- *   NÃO USE em produção.
- * - Clientes da loja NÃO têm login. Login é apenas para uso interno.
+ * INTEGRAÇÃO COM API:
+ * - POST /api/auth/login  → autenticação real (substitui mockAuthenticate)
+ * - POST /api/customers   → cadastro real (substitui simulação)
+ * - API_BASE detectado automaticamente conforme o contexto de execução.
  * ===========================================================================*/
 
 "use strict";
 
 (function () {
+  // ---------------------------------------------------------------------------
+  // Configuração da API
+  // ---------------------------------------------------------------------------
+  // Quando o frontend é servido pelo próprio backend (Docker / produção),
+  // usamos URLs relativas. Quando aberto diretamente do sistema de arquivos
+  // (file://), apontamos para o servidor local.
+  const API_BASE =
+    window.location.protocol === "file:" ? "http://localhost:3000" : "";
+
   // ---------------------------------------------------------------------------
   // Helpers de DOM
   // ---------------------------------------------------------------------------
@@ -80,9 +83,10 @@
     },
   };
 
-  // Estado interno (em memória — não persiste)
+  // Estado interno (em memória — não persiste entre recargas)
   let salvando = false;
-  let sessaoAtiva = false; // sessão provisória, apenas em memória
+  let sessaoAtiva = false;
+  let jwtToken = null; // Token JWT: APENAS em memória, nunca gravado no navegador
 
   // =============================================================================
   // TEMA
@@ -150,9 +154,7 @@
   function mostrarTelaLogin() {
     els.telaApp.hidden = true;
     els.telaLogin.hidden = false;
-    // Limpa o aviso de "em breve" do app, se estiver aberto.
     ocultarAvisoModulo();
-    // Foco no primeiro campo do login.
     try {
       els.loginUsuario.focus();
     } catch (_e) {}
@@ -161,62 +163,14 @@
   function mostrarTelaApp() {
     els.telaLogin.hidden = true;
     els.telaApp.hidden = false;
-    // Foco no campo Nome do cadastro.
     try {
       els.nome.focus();
     } catch (_e) {}
   }
 
   // =============================================================================
-  // LOGIN (PROTÓTIPO — NÃO É AUTENTICAÇÃO REAL)
+  // LOGIN — integrado com POST /api/auth/login
   // =============================================================================
-
-  /*
-   * Credenciais provisórias APENAS para protótipo de fluxo visual.
-   * NÃO use em produção. Quando o back-end existir:
-   *   - estas credenciais serão removidas;
-   *   - usuário/senha serão validados no servidor;
-   *   - senhas serão guardadas com hash forte (ex.: argon2/bcrypt);
-   *   - haverá controle de sessão segura, permissões, logs e auditoria.
-   */
-  const CREDENCIAIS_PROTOTIPO = Object.freeze({
-    usuario: "admin",
-    senha: "admin-demo-123",
-  });
-
-  /*
-   * mockAuthenticate — função temporária de autenticação para protótipo.
-   * NÃO use em produção. Comparações no front-end nunca substituem
-   * autenticação real no back-end.
-   */
-  function mockAuthenticate(usuario, senha) {
-    const u = typeof usuario === "string" ? usuario.trim() : "";
-    const s = typeof senha === "string" ? senha : "";
-    // Comparação direta: aceitável APENAS por ser protótipo local.
-    // Em produção, esta verificação deverá ocorrer no servidor.
-    return (
-      u === CREDENCIAIS_PROTOTIPO.usuario &&
-      s === CREDENCIAIS_PROTOTIPO.senha
-    );
-  }
-  // Não expomos mockAuthenticate em window — evitar uso indevido.
-
-  // Proteção básica de UX contra muitas tentativas (apenas em memória).
-  // NÃO é segurança real: usuário pode recarregar a página.
-  // Proteção real (rate limiting, lockout) deverá vir do back-end.
-  const LOGIN_MAX_TENTATIVAS = 5;
-  const LOGIN_BLOQUEIO_MS = 15000;
-  let loginTentativas = 0;
-  let loginBloqueadoAte = 0;
-
-  function loginEstaBloqueado() {
-    return Date.now() < loginBloqueadoAte;
-  }
-
-  function segundosAteDesbloqueio() {
-    return Math.max(0, Math.ceil((loginBloqueadoAte - Date.now()) / 1000));
-  }
-
   function mostrarMensagemLogin(texto, tipo) {
     const el = els.mensagemLogin;
     el.classList.remove("tipo-sucesso", "tipo-erro");
@@ -232,86 +186,73 @@
     els.mensagemLogin.hidden = true;
   }
 
-  function bloquearBotaoEntrarTemporariamente() {
-    els.btnEntrar.disabled = true;
-    const desbloquear = () => {
-      els.btnEntrar.disabled = false;
-      els.btnEntrar.textContent = "Entrar";
-    };
-    const tick = () => {
-      const restante = segundosAteDesbloqueio();
-      if (restante <= 0) {
-        desbloquear();
-        return;
-      }
-      els.btnEntrar.textContent = "Aguarde " + restante + "s";
-      window.setTimeout(tick, 500);
-    };
-    tick();
-  }
-
-  els.formLogin.addEventListener("submit", function (ev) {
+  els.formLogin.addEventListener("submit", async function (ev) {
     ev.preventDefault();
     limparMensagemLogin();
-
-    if (loginEstaBloqueado()) {
-      mostrarMensagemLogin(
-        "Muitas tentativas. Aguarde alguns segundos e tente novamente.",
-        "erro"
-      );
-      return;
-    }
 
     const u = (els.loginUsuario.value || "").trim();
     const s = els.loginSenha.value || "";
 
     if (!u || !s) {
-      // Mensagem genérica — não revela qual campo falhou.
       mostrarMensagemLogin("Usuário ou senha inválidos.", "erro");
       return;
     }
 
-    let autenticado = false;
+    els.btnEntrar.disabled = true;
+    els.btnEntrar.textContent = "Entrando...";
+    let loginSucesso = false;
+
     try {
-      autenticado = mockAuthenticate(u, s);
+      const resp = await fetch(API_BASE + "/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: u, password: s }),
+      });
+
+      let data = {};
+      try {
+        data = await resp.json();
+      } catch (_e) {
+        // Resposta sem corpo JSON — tratar como erro genérico
+      }
+
+      if (resp.ok && data.token) {
+        loginSucesso = true;
+        jwtToken = data.token;
+        sessaoAtiva = true;
+        els.formLogin.reset();
+        limparMensagemLogin();
+        mostrarTelaApp();
+        return;
+      }
+
+      // Limpa senha após falha — mantém o usuário para conveniência
+      els.loginSenha.value = "";
+      els.loginSenha.focus();
+
+      if (resp.status === 429) {
+        mostrarMensagemLogin(
+          data.message ||
+            "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+          "erro"
+        );
+        return;
+      }
+
+      // 401 ou qualquer outra falha: mensagem genérica (nunca revelar detalhes)
+      mostrarMensagemLogin("Usuário ou senha inválidos.", "erro");
     } catch (_e) {
-      // Erro genérico ao usuário. Detalhes técnicos nunca aparecem.
+      // Falha de rede (servidor offline ou inacessível)
       mostrarMensagemLogin(
-        "Não foi possível concluir o acesso. Tente novamente.",
+        "Não foi possível conectar ao servidor. Verifique se o sistema está ativo.",
         "erro"
       );
-      return;
+    } finally {
+      if (!loginSucesso) {
+        els.btnEntrar.disabled = false;
+        els.btnEntrar.textContent = "Entrar";
+      }
     }
-
-    if (autenticado) {
-      // Sucesso: estabelece sessão provisória APENAS em memória.
-      sessaoAtiva = true;
-      loginTentativas = 0;
-      loginBloqueadoAte = 0;
-      // Limpa campos sensíveis da tela antes de mostrar o app.
-      els.formLogin.reset();
-      limparMensagemLogin();
-      mostrarTelaApp();
-      return;
-    }
-
-    // Falha: contabiliza tentativa e, se exceder, bloqueia o botão.
-    loginTentativas++;
-    if (loginTentativas >= LOGIN_MAX_TENTATIVAS) {
-      loginBloqueadoAte = Date.now() + LOGIN_BLOQUEIO_MS;
-      loginTentativas = 0;
-      bloquearBotaoEntrarTemporariamente();
-      mostrarMensagemLogin(
-        "Muitas tentativas. Aguarde alguns segundos e tente novamente.",
-        "erro"
-      );
-      return;
-    }
-
-    // Limpa a senha após cada falha. Mantém o usuário para conveniência.
-    els.loginSenha.value = "";
-    els.loginSenha.focus();
-    mostrarMensagemLogin("Usuário ou senha inválidos.", "erro");
   });
 
   // =============================================================================
@@ -350,9 +291,7 @@
 
   function mostrarAvisoModulo(modulo) {
     const nome = NOMES_MODULOS[modulo] || "Este módulo";
-    // textContent — nunca innerHTML.
-    els.avisoModulo.textContent =
-      nome + " ainda não disponível nesta etapa.";
+    els.avisoModulo.textContent = nome + " ainda não disponível nesta etapa.";
     els.avisoModulo.hidden = false;
   }
 
@@ -361,14 +300,12 @@
     els.avisoModulo.hidden = true;
   }
 
-  // Listeners para itens da sidebar
   document.querySelectorAll(".sidebar-item").forEach((item) => {
     item.addEventListener("click", function () {
       const modulo = item.getAttribute("data-modulo");
       if (!modulo) return;
 
       if (modulo === "clientes") {
-        // Único módulo ativo nesta etapa.
         ocultarAvisoModulo();
         fecharSidebar();
         try {
@@ -382,7 +319,7 @@
         return;
       }
 
-      // Módulos futuros: aviso amigável, sem redirecionar.
+      // Módulos futuros: aviso amigável
       mostrarAvisoModulo(modulo);
       fecharSidebar();
     });
@@ -390,12 +327,11 @@
 
   function encerrarSessao() {
     sessaoAtiva = false;
-    // Limpa o estado visual completamente antes de voltar para o login.
+    jwtToken = null; // Remove token da memória imediatamente
     resetarFormularioCompletamente();
     limparMensagemGlobal();
     ocultarAvisoModulo();
     fecharSidebar();
-    // Limpa também os campos do login.
     els.formLogin.reset();
     limparMensagemLogin();
     mostrarTelaLogin();
@@ -476,7 +412,7 @@
     return "(" + d.slice(0, 2) + ") " + d.slice(2, 7) + "-" + d.slice(7);
   }
 
-  // ---------- Validações ----------
+  // ---------- Validações de UX (a barreira de segurança real é o backend) ----------
   function validarCPF(cpf) {
     const d = somenteDigitos(cpf);
     if (d.length !== 11) return false;
@@ -512,7 +448,6 @@
   }
 
   function validarEmail(email) {
-    // Regex pragmática para UX. Validação real ocorre no back-end.
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     return re.test(email);
   }
@@ -529,7 +464,6 @@
   // ---------- Eventos de input / máscara dinâmica ----------
   els.tipoCliente.addEventListener("change", function () {
     const tipo = els.tipoCliente.value;
-    // Limpa documento ao trocar tipo, evitando inconsistência (PF com CNPJ etc.)
     els.documento.value = "";
     definirErro("documento", "");
 
@@ -578,7 +512,7 @@
 
   els.observacoes.addEventListener("input", atualizarContadorObservacoes);
 
-  // ---------- Validação completa ----------
+  // ---------- Validação completa de UX ----------
   function validarFormulario() {
     limparTodosOsErros();
     let primeiroInvalido = null;
@@ -646,32 +580,19 @@
     return true;
   }
 
-  // ---------- Payload ----------
-  // Escopo interno (IIFE). NÃO é exposta em window — evita acesso via console.
+  // ---------- Payload (mesmo contrato esperado pelo backend) ----------
   function buildCustomerPayload() {
     const tipo = els.tipoCliente.value;
-    // Validação explícita: sem fallback silencioso para "PF".
-    // Se o tipo for inválido, retorna null e o chamador interrompe o fluxo.
-    if (tipo !== "PF" && tipo !== "PJ") {
-      return null;
-    }
-
-    const nome = (els.nome.value || "").trim();
-    const doc = somenteDigitos(els.documento.value);
-    const tel = somenteDigitos(els.telefone.value);
-    const email = (els.email.value || "").trim();
-    const endereco = (els.endereco.value || "").trim();
-    const obs = (els.observacoes.value || "").trim();
+    if (tipo !== "PF" && tipo !== "PJ") return null;
 
     return {
-      name: nome,
+      name:         (els.nome.value || "").trim(),
       customerType: tipo,
-      document: doc,
-      phone: tel,
-      email: email ? email : null,
-      address: endereco ? endereco : null,
-      notes: obs ? obs : null,
-      active: true,
+      document:     somenteDigitos(els.documento.value),
+      phone:        somenteDigitos(els.telefone.value),
+      email:        (els.email.value || "").trim() || null,
+      address:      (els.endereco.value || "").trim() || null,
+      notes:        (els.observacoes.value || "").trim() || null,
     };
   }
 
@@ -686,15 +607,16 @@
     else els.btnSalvar.removeAttribute("aria-busy");
   }
 
-  // ---------- Submit ----------
-  els.form.addEventListener("submit", function (ev) {
+  // ---------- Submit — integrado com POST /api/customers ----------
+  els.form.addEventListener("submit", async function (ev) {
     ev.preventDefault();
-    if (!sessaoAtiva) {
-      // Defesa básica: se a sessão provisória não estiver ativa, volta ao login.
-      // (Lembrando que isso não substitui autenticação real no back-end.)
-      mostrarTelaLogin();
+
+    if (!sessaoAtiva || !jwtToken) {
+      // Sessão inválida — força novo login sem expor detalhes
+      encerrarSessao();
       return;
     }
+
     if (salvando) return;
     limparMensagemGlobal();
 
@@ -706,11 +628,8 @@
       return;
     }
 
-    // Monta o payload em memória local. NÃO há envio para API/banco nesta etapa.
-    const _payload = buildCustomerPayload(); // eslint-disable-line no-unused-vars
-    if (!_payload) {
-      // Defesa redundante: se chegou aqui sem tipo válido, interrompe sem
-      // enviar nada e mantém o usuário no formulário com mensagem genérica.
+    const payload = buildCustomerPayload();
+    if (!payload) {
       definirErro("tipoCliente", "Selecione o tipo de cliente.");
       mostrarMensagemGlobal(
         "Não foi possível salvar. Verifique os campos destacados.",
@@ -721,14 +640,25 @@
 
     setSalvando(true);
 
-    // Simulação intencional de latência. Nenhuma chamada real é feita.
-    window.setTimeout(function () {
+    try {
+      const resp = await fetch(API_BASE + "/api/customers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + jwtToken,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      let data = {};
       try {
-        // Mensagem genérica — não revela PII completa.
-        mostrarMensagemGlobal(
-          "Cliente validado com sucesso. Pronto para futura integração com o banco de dados.",
-          "sucesso"
-        );
+        data = await resp.json();
+      } catch (_e) {
+        // Resposta sem corpo JSON — tratar como erro genérico
+      }
+
+      if (resp.status === 201) {
+        mostrarMensagemGlobal("Cliente cadastrado com sucesso.", "sucesso");
         els.form.reset();
         atualizarContadorObservacoes();
         els.labelDocumento.textContent = "CPF / CNPJ";
@@ -737,16 +667,41 @@
         els.ajudaDocumento.textContent =
           "A máscara muda conforme o tipo de cliente.";
         els.nome.focus();
-      } catch (_e) {
-        // Mensagem amigável — nunca exibir erro técnico ao usuário.
+        return;
+      }
+
+      if (resp.status === 401) {
+        // Token expirado ou inválido — força novo login
+        jwtToken = null;
+        sessaoAtiva = false;
+        mostrarTelaLogin();
+        return;
+      }
+
+      if (resp.status === 409) {
+        definirErro("documento", "CPF/CNPJ já cadastrado no sistema.");
         mostrarMensagemGlobal(
-          "Ocorreu um erro inesperado. Tente novamente em instantes.",
+          "Não foi possível salvar. CPF/CNPJ já cadastrado.",
           "erro"
         );
-      } finally {
-        setSalvando(false);
+        return;
       }
-    }, 700);
+
+      // 400 com mensagem do servidor ou erro genérico
+      mostrarMensagemGlobal(
+        (resp.status === 400 && data.message) ? data.message
+          : "Não foi possível salvar. Tente novamente.",
+        "erro"
+      );
+    } catch (_e) {
+      // Falha de rede (servidor offline ou inacessível)
+      mostrarMensagemGlobal(
+        "Não foi possível conectar ao servidor. Verifique se o sistema está ativo.",
+        "erro"
+      );
+    } finally {
+      setSalvando(false);
+    }
   });
 
   // ---------- Limpar / Cancelar ----------
@@ -802,10 +757,7 @@
 
   // =============================================================================
   // BOOTSTRAP
-  // Ao carregar a página, sempre exibimos a tela de login.
-  // Recarregar = voltar ao login (sessão NÃO persiste).
-  // resetarFormularioCompletamente() garante estado consistente do cadastro
-  // antes mesmo da tela ser exibida (evita resquícios em recargas/autopreencher).
+  // Sempre exibe a tela de login ao carregar. Sessão NÃO persiste entre recargas.
   // =============================================================================
   inicializarTema();
   resetarFormularioCompletamente();

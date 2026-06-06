@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // SQLite para ambiente local (Hélio) e desenvolvimento.
+  // Para migrar para PostgreSQL, troque por:
+  //   provider = "postgresql"
+  // e atualize DATABASE_URL no .env. Nenhuma query precisa ser alterada.
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Usuários do sistema (funcionários e administradores da loja).
+/// Clientes da loja NÃO têm login — este model é apenas para acesso interno.
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String   // Sempre hash bcrypt — NUNCA senha em texto plano
+  role         String   @default("operator") // "admin" | "operator"
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// Clientes da loja (registro comercial).
+/// Clientes NÃO têm login no sistema — são apenas dados cadastrais.
+model Customer {
+  id           Int      @id @default(autoincrement())
+  name         String
+  customerType String   // "PF" (Pessoa Física) | "PJ" (Pessoa Jurídica)
+  document     String   @unique // CPF (11 dígitos) ou CNPJ (14 dígitos) — apenas dígitos, sem máscara
+  phone        String   // Apenas dígitos, sem máscara
+  email        String?
+  address      String?
+  notes        String?
+  active       Boolean  @default(true) // Soft delete: false = inativo
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

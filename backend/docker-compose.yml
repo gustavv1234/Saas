@@ -1,0 +1,43 @@
+version: '3.9'
+
+# =============================================================================
+# Gestão Autopeças — Docker Compose
+# Sobe o backend + serve o frontend como arquivos estáticos.
+#
+# USO:
+#   docker-compose up -d          # sobe em background
+#   docker-compose logs -f        # acompanha logs
+#   docker-compose exec backend node prisma/seed.js   # cria usuário admin (primeira vez)
+#   docker-compose down           # encerra
+# =============================================================================
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gestao-autopecas-backend
+    restart: unless-stopped
+
+    ports:
+      - "${PORT:-3000}:3000"
+
+    volumes:
+      # Banco SQLite persistido fora do container
+      - sqlite_data:/app/data
+      # Frontend servido como arquivos estáticos pelo Express
+      - ../frontend:/app/public:ro
+
+    env_file:
+      - .env
+
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout:  10s
+      retries:  3
+      start_period: 15s
+
+volumes:
+  sqlite_data:
+    driver: local
