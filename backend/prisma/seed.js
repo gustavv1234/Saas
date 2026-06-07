@@ -20,13 +20,15 @@ const MASTER_SCHEMA = path.resolve(__dirname, 'master', 'schema.prisma');
 const TENANT_SCHEMA = path.resolve(__dirname, 'tenant', 'schema.prisma');
 const DATA_DIR      = path.resolve(__dirname, '..', 'data');
 
-const MASTER_DB_URL = process.env.MASTER_DATABASE_URL;
-const MASTER_PASS   = process.env.SEED_MASTER_PASSWORD;
-const ADMIN_PASS    = process.env.SEED_ADMIN_PASSWORD;
+const MASTER_PASS = process.env.SEED_MASTER_PASSWORD;
+const ADMIN_PASS  = process.env.SEED_ADMIN_PASSWORD;
 
-if (!MASTER_DB_URL) throw new Error('MASTER_DATABASE_URL não definida.');
 if (!MASTER_PASS || MASTER_PASS.length < 8) throw new Error('SEED_MASTER_PASSWORD obrigatória (mín. 8 chars).');
 if (!ADMIN_PASS  || ADMIN_PASS.length  < 8) throw new Error('SEED_ADMIN_PASSWORD obrigatória (mín. 8 chars).');
+
+// Garante que o DB de cada schema usa caminho absoluto para o Prisma CLI resolver corretamente
+const MASTER_DB_PATH = path.resolve(DATA_DIR, 'master.db');
+const MASTER_DB_URL  = `file:${MASTER_DB_PATH}`;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function runMigration(schema, dbUrl) {
@@ -46,7 +48,7 @@ async function main() {
   runMigration(MASTER_SCHEMA, MASTER_DB_URL);
 
   const { PrismaClient: MasterClient } = require('../src/generated/master');
-  const master = new MasterClient();
+  const master = new MasterClient({ datasources: { db: { url: MASTER_DB_URL } } });
 
   const existingMaster = await master.masterUser.findUnique({ where: { username: 'master' } });
   if (!existingMaster) {
