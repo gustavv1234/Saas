@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../src/generated/tenant"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  name         String   @default("")
+  role         String   @default("operator")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Customer {
+  id           Int      @id @default(autoincrement())
+  name         String
+  customerType String
+  document     String   @unique
+  phone        String
+  email        String?
+  address      String?
+  notes        String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  active    Boolean   @default(true)
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+model Product {
+  id           Int             @id @default(autoincrement())
+  name         String
+  sku          String          @unique
+  categoryId   Int?
+  category     Category?       @relation(fields: [categoryId], references: [id])
+  unit         String          @default("un")
+  costPrice    Float           @default(0)
+  salePrice    Float           @default(0)
+  minStock     Int             @default(0)
+  currentStock Int             @default(0)
+  active       Boolean         @default(true)
+  movements    StockMovement[]
+  saleItems    SaleItem[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model StockMovement {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  type      String   // "IN" | "OUT" | "ADJUST"
+  quantity  Int
+  reason    String?
+  userId    Int
+  createdAt DateTime @default(now())
+}
+
+model Sale {
+  id            Int        @id @default(autoincrement())
+  customerId    Int?
+  total         Float
+  discount      Float      @default(0)
+  paymentMethod String     @default("cash")
+  status        String     @default("completed")
+  notes         String?
+  userId        Int
+  items         SaleItem[]
+  createdAt     DateTime   @default(now())
+}
+
+model SaleItem {
+  id        Int     @id @default(autoincrement())
+  saleId    Int
+  sale      Sale    @relation(fields: [saleId], references: [id])
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Float
+  subtotal  Float
+}

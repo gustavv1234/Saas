@@ -1,7 +1,7 @@
 'use strict';
 
 const { Router } = require('express');
-const { loginController } = require('./auth.controller');
+const { login: loginController } = require('./auth.controller');
 const { loginRateLimiter } = require('../../middlewares/rateLimiter');
 
 const router = Router();

@@ -1,53 +1,57 @@
 'use strict';
 
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const prisma = require('../../config/prisma');
-const env = require('../../config/env');
+const jwt    = require('jsonwebtoken');
+const env    = require('../../config/env');
+const { getMasterClient, getTenantClient } = require('../../config/prisma');
 const { createError } = require('../../middlewares/validate');
 
-// Mensagem genérica: nunca revelar se o usuário existe ou não.
-const GENERIC_AUTH_ERROR = 'Usuário ou senha inválidos.';
+const DUMMY_HASH        = '$2a$12$invalidhashusedtopreventtimingattacks00000000000000000';
+const GENERIC_AUTH_ERROR = 'Credenciais inválidas.';
 
-/**
- * Autentica um usuário e retorna um JWT em caso de sucesso.
- *
- * Proteção contra timing attacks: o hash é sempre comparado,
- * mesmo quando o usuário não existe (evita diferença de tempo
- * que revelaria quais usernames são válidos).
- */
-async function login(username, password) {
-  if (!username || !password) {
-    throw createError(GENERIC_AUTH_ERROR, 401);
-  }
+async function login({ username, password, tenantSlug }) {
+  if (!tenantSlug) return _masterLogin(username, password);
+  return _tenantLogin(username, password, tenantSlug);
+}
 
-  const user = await prisma.user.findUnique({ where: { username } });
+async function _masterLogin(username, password) {
+  const master = getMasterClient();
+  const user   = await master.masterUser.findUnique({ where: { username } }).catch(() => null);
 
-  // Hash fictício com o custo correto — garante tempo constante quando usuário não existe.
-  // O valor não coincide com nenhuma senha real (não começa com $2a$ válido do bcrypt).
-  const DUMMY_HASH = '$2a$12$invalidhashusedtopreventtimingattacks00000000000000000';
-  const hashToCompare = user ? user.passwordHash : DUMMY_HASH;
+  const hash = user ? user.passwordHash : DUMMY_HASH;
+  let ok = false;
+  try { ok = await bcrypt.compare(password, hash); } catch (_e) {}
 
-  let passwordMatch = false;
-  try {
-    passwordMatch = await bcrypt.compare(password, hashToCompare);
-  } catch (_e) {
-    // bcrypt.compare pode lançar se o hash for malformado — tratar como falha
-    passwordMatch = false;
-  }
-
-  // Verificações em sequência para não revelar qual falhou
-  if (!user || !passwordMatch || !user.active) {
-    throw createError(GENERIC_AUTH_ERROR, 401);
-  }
+  if (!user || !ok) throw createError(GENERIC_AUTH_ERROR, 401);
 
   const token = jwt.sign(
-    { id: user.id, username: user.username, role: user.role },
+    { id: user.id, username: user.username, role: 'master' },
     env.jwtSecret,
     { expiresIn: env.jwtExpiresIn }
   );
+  return { token, user: { id: user.id, username: user.username, role: 'master' } };
+}
 
-  return { token };
+async function _tenantLogin(username, password, tenantSlug) {
+  const master = getMasterClient();
+  const tenant = await master.tenant.findUnique({ where: { slug: tenantSlug } }).catch(() => null);
+  if (!tenant || !tenant.active) throw createError(GENERIC_AUTH_ERROR, 401);
+
+  const prisma = getTenantClient(tenantSlug);
+  const user   = await prisma.user.findUnique({ where: { username } }).catch(() => null);
+
+  const hash = user ? user.passwordHash : DUMMY_HASH;
+  let ok = false;
+  try { ok = await bcrypt.compare(password, hash); } catch (_e) {}
+
+  if (!user || !ok || !user.active) throw createError(GENERIC_AUTH_ERROR, 401);
+
+  const token = jwt.sign(
+    { id: user.id, username: user.username, role: user.role, tenantId: tenant.id, tenantSlug: tenant.slug },
+    env.jwtSecret,
+    { expiresIn: env.jwtExpiresIn }
+  );
+  return { token, user: { id: user.id, username: user.username, role: user.role, tenantId: tenant.id, tenantSlug: tenant.slug } };
 }
 
 module.exports = { login };

@@ -3,33 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Sistema interno de Gestão Autopeças — uso de funcionários da loja." />
+  <meta name="description" content="ERP SaaS — Gestão Autopeças. Uso interno." />
   <meta name="robots" content="noindex, nofollow" />
   <title>Gestão Autopeças</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- ===================================================================
-       TELA DE LOGIN
-       - Apenas para uso INTERNO da loja (administrador / funcionário).
-       - Clientes da loja NÃO têm login, NÃO têm senha, NÃO acessam.
-       - Esta autenticação é apenas um protótipo visual front-end.
-         A autenticação real (hash, sessão, permissões, auditoria)
-         deverá ser feita no back-end no futuro.
-       =================================================================== -->
+
+  <!-- ===== TELA DE LOGIN ===== -->
   <section id="tela-login" class="tela-login" aria-labelledby="titulo-login">
     <div class="login-top">
-      <button
-        type="button"
-        id="btn-tema-login"
-        class="btn btn-ghost btn-tema"
-        aria-label="Alternar tema (claro/escuro)"
-        aria-pressed="false"
-        data-btn-tema
-      >
+      <button type="button" id="btn-tema-login" class="btn btn-ghost btn-tema"
+        aria-label="Alternar tema" aria-pressed="false" data-btn-tema>
         <span class="btn-tema-icone" aria-hidden="true" data-tema-icone>◐</span>
         <span class="btn-tema-texto" data-tema-texto>Tema escuro</span>
       </button>
@@ -42,391 +30,407 @@
           <p class="subtitulo">Acesso interno. Informe suas credenciais.</p>
         </header>
 
-        <div
-          id="mensagem-login"
-          class="mensagem-global"
-          role="alert"
-          aria-live="assertive"
-          aria-atomic="true"
-          hidden
-        ></div>
+        <div id="mensagem-login" class="mensagem-global" role="alert"
+          aria-live="assertive" aria-atomic="true" hidden></div>
 
-        <form id="form-login" class="form-login" novalidate autocomplete="off">
+        <form id="form-login" novalidate autocomplete="off">
           <div class="campo">
-            <label for="login-usuario">Usuário</label>
-            <input
-              type="text"
-              id="login-usuario"
-              name="usuario"
-              maxlength="60"
-              required
-              autocomplete="username"
-              aria-required="true"
-              autocapitalize="off"
-              spellcheck="false"
-            />
+            <label for="login-tenant">Empresa (tenant)</label>
+            <input type="text" id="login-tenant" name="tenant" maxlength="60"
+              autocomplete="off" autocapitalize="off" spellcheck="false"
+              placeholder="demo" />
+            <small class="ajuda-campo">Deixe em branco para login master.</small>
           </div>
-
           <div class="campo">
-            <label for="login-senha">Senha</label>
-            <input
-              type="password"
-              id="login-senha"
-              name="senha"
-              maxlength="120"
-              required
-              autocomplete="current-password"
-              aria-required="true"
-            />
+            <label for="login-usuario">Usuário <span class="obrigatorio">*</span></label>
+            <input type="text" id="login-usuario" name="usuario" maxlength="60"
+              required autocomplete="username" autocapitalize="off" spellcheck="false" />
           </div>
-
+          <div class="campo">
+            <label for="login-senha">Senha <span class="obrigatorio">*</span></label>
+            <input type="password" id="login-senha" name="senha" maxlength="120"
+              required autocomplete="current-password" />
+          </div>
           <div class="acoes acoes-login">
-            <button type="submit" id="btn-entrar" class="btn btn-primario btn-bloco">
-              Entrar
-            </button>
+            <button type="submit" id="btn-entrar" class="btn btn-primario btn-bloco">Entrar</button>
           </div>
         </form>
 
         <footer class="card-footer-login">
-          <small>
-            Etapa de protótipo. Sem back-end. Credenciais reais e
-            controle de acesso virão na próxima fase.
-          </small>
+          <small>Sistema de gestão interno. Uso exclusivo de funcionários autorizados.</small>
         </footer>
       </div>
     </main>
   </section>
 
-  <!-- ===================================================================
-       TELA PRINCIPAL (após login)
-       - Layout administrativo: sidebar + topbar + conteúdo.
-       - Inicia oculta. JS exibe após autenticação provisória.
-       =================================================================== -->
+  <!-- ===== TELA APP ===== -->
   <section id="tela-app" class="tela-app" hidden>
     <a class="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
-
-    <!-- Backdrop usado pelo modo "menu aberto" em telas menores -->
     <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
 
-    <aside
-      id="sidebar"
-      class="sidebar"
-      aria-label="Menu principal"
-    >
+    <aside id="sidebar" class="sidebar" aria-label="Menu principal">
       <div class="sidebar-brand">
         <span class="sidebar-brand-texto">Gestão Autopeças</span>
       </div>
-
       <nav class="sidebar-nav" aria-label="Navegação do sistema">
         <ul class="sidebar-lista">
-          <li>
-            <button
-              type="button"
-              class="sidebar-item is-active"
-              data-modulo="clientes"
-              aria-current="page"
-            >
-              <span class="sidebar-item-label">Clientes</span>
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              class="sidebar-item is-em-breve"
-              data-modulo="produtos"
-              aria-label="Produtos, módulo em breve"
-            >
-              <span class="sidebar-item-label">Produtos</span>
-              <span class="badge-em-breve" aria-hidden="true">em breve</span>
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              class="sidebar-item is-em-breve"
-              data-modulo="estoque"
-              aria-label="Estoque, módulo em breve"
-            >
-              <span class="sidebar-item-label">Estoque</span>
-              <span class="badge-em-breve" aria-hidden="true">em breve</span>
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              class="sidebar-item is-em-breve"
-              data-modulo="vendas"
-              aria-label="Vendas, módulo em breve"
-            >
-              <span class="sidebar-item-label">Vendas</span>
-              <span class="badge-em-breve" aria-hidden="true">em breve</span>
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              class="sidebar-item is-em-breve"
-              data-modulo="relatorios"
-              aria-label="Relatórios, módulo em breve"
-            >
-              <span class="sidebar-item-label">Relatórios</span>
-              <span class="badge-em-breve" aria-hidden="true">em breve</span>
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              class="sidebar-item is-em-breve"
-              data-modulo="configuracoes"
-              aria-label="Configurações, módulo em breve"
-            >
-              <span class="sidebar-item-label">Configurações</span>
-              <span class="badge-em-breve" aria-hidden="true">em breve</span>
-            </button>
-          </li>
+          <li><button type="button" class="sidebar-item" data-modulo="clientes" aria-current="false">
+            <span class="sidebar-item-label">Clientes</span>
+          </button></li>
+          <li><button type="button" class="sidebar-item" data-modulo="produtos" aria-current="false">
+            <span class="sidebar-item-label">Produtos</span>
+          </button></li>
+          <li><button type="button" class="sidebar-item" data-modulo="estoque" aria-current="false">
+            <span class="sidebar-item-label">Estoque</span>
+          </button></li>
+          <li><button type="button" class="sidebar-item" data-modulo="vendas" aria-current="false">
+            <span class="sidebar-item-label">Vendas</span>
+          </button></li>
+          <li><button type="button" class="sidebar-item" data-modulo="relatorios" aria-current="false">
+            <span class="sidebar-item-label">Relatórios</span>
+          </button></li>
+          <li><button type="button" class="sidebar-item is-em-breve" data-modulo="configuracoes" aria-label="Configurações, em breve">
+            <span class="sidebar-item-label">Configurações</span>
+            <span class="badge-em-breve" aria-hidden="true">em breve</span>
+          </button></li>
         </ul>
-
         <ul class="sidebar-lista sidebar-lista-rodape">
-          <li>
-            <button
-              type="button"
-              id="btn-sair"
-              class="sidebar-item sidebar-item-sair"
-              data-modulo="sair"
-            >
-              <span class="sidebar-item-label">Sair</span>
-            </button>
-          </li>
+          <li><button type="button" id="btn-sair" class="sidebar-item sidebar-item-sair" data-modulo="sair">
+            <span class="sidebar-item-label">Sair</span>
+          </button></li>
         </ul>
       </nav>
     </aside>
 
     <div class="app-conteudo">
       <header class="topbar" role="banner">
-        <button
-          type="button"
-          id="btn-menu"
-          class="btn btn-ghost btn-menu"
-          aria-label="Abrir/fechar menu"
-          aria-controls="sidebar"
-          aria-expanded="false"
-        >
+        <button type="button" id="btn-menu" class="btn btn-ghost btn-menu"
+          aria-label="Abrir/fechar menu" aria-controls="sidebar" aria-expanded="false">
           <span aria-hidden="true">☰</span>
         </button>
-
         <h2 class="topbar-titulo" id="topbar-titulo">Clientes</h2>
-
-        <button
-          type="button"
-          id="btn-tema-app"
-          class="btn btn-ghost btn-tema"
-          aria-label="Alternar tema (claro/escuro)"
-          aria-pressed="false"
-          data-btn-tema
-        >
+        <button type="button" id="btn-tema-app" class="btn btn-ghost btn-tema"
+          aria-label="Alternar tema" aria-pressed="false" data-btn-tema>
           <span class="btn-tema-icone" aria-hidden="true" data-tema-icone>◐</span>
           <span class="btn-tema-texto" data-tema-texto>Tema escuro</span>
         </button>
       </header>
 
       <main id="conteudo-principal" class="app-main" role="main">
-        <!-- Mensagem de "módulo em breve" — usada quando o usuário clica em um módulo futuro -->
-        <div
-          id="aviso-modulo"
-          class="aviso-modulo"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-          hidden
-        ></div>
+        <div id="aviso-modulo" class="aviso-modulo" role="status" aria-live="polite" hidden></div>
 
-        <section class="card" aria-labelledby="titulo-pagina">
-          <header class="card-header">
-            <h2 id="titulo-pagina">Cadastro de Cliente</h2>
-            <p class="subtitulo">
-              Preencha os dados básicos do cliente para cadastro no sistema.
-              Clientes da loja não acessam o sistema — este cadastro é apenas
-              registro comercial.
-            </p>
-          </header>
-
-          <div
-            id="mensagem-global"
-            class="mensagem-global"
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-            hidden
-          ></div>
-
-          <!--
-            autocomplete="off" no formulário e nos campos com dados pessoais:
-            evita que o navegador memorize/sugira nome, telefone, e-mail e
-            endereço em máquinas compartilhadas da loja. CPF/CNPJ também
-            permanece off. Estes atributos NÃO substituem políticas reais
-            de proteção de dados — apenas reduzem exposição local.
-          -->
-          <form
-            id="form-cliente"
-            class="form-cliente"
-            novalidate
-            autocomplete="off"
-          >
-            <fieldset class="form-secao">
-              <legend>Dados principais</legend>
-
-              <div class="campo">
-                <label for="nome">
-                  Nome / Razão Social <span class="obrigatorio" aria-hidden="true">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="nome"
-                  name="nome"
-                  maxlength="120"
-                  minlength="3"
-                  required
-                  autocomplete="off"
-                  aria-required="true"
-                  aria-describedby="erro-nome"
-                />
-                <small class="erro-campo" id="erro-nome" aria-live="polite"></small>
+        <!-- ── MÓDULO: CLIENTES (lista) ──────────────────────────────── -->
+        <section id="modulo-clientes" hidden>
+          <!-- Card lista -->
+          <div id="card-clientes-lista" class="card">
+            <div class="card-header-row">
+              <div>
+                <h2>Clientes</h2>
+                <p class="subtitulo" style="margin-bottom:0">Gerencie os clientes cadastrados.</p>
               </div>
+              <button id="btn-novo-cliente" class="btn btn-primario btn-sm">+ Novo Cliente</button>
+            </div>
+            <div class="input-busca" style="margin:16px 0 12px">
+              <span class="input-busca-icone" aria-hidden="true">⌕</span>
+              <input id="busca-clientes" class="campo-busca" type="text"
+                placeholder="Buscar por nome..." autocomplete="off" />
+            </div>
+            <div id="tabela-clientes-container"></div>
+            <nav id="paginacao-clientes" class="paginacao" aria-label="Paginação de clientes"></nav>
+          </div>
 
-              <div class="campo">
-                <label for="tipo-cliente">
-                  Tipo de cliente <span class="obrigatorio" aria-hidden="true">*</span>
-                </label>
-                <select
-                  id="tipo-cliente"
-                  name="tipoCliente"
-                  required
-                  aria-required="true"
-                  aria-describedby="erro-tipo-cliente"
-                >
-                  <option value="">Selecione...</option>
-                  <option value="PF">Pessoa Física</option>
-                  <option value="PJ">Pessoa Jurídica</option>
-                </select>
-                <small class="erro-campo" id="erro-tipo-cliente" aria-live="polite"></small>
+          <!-- Card formulário (oculto por padrão) -->
+          <div id="card-cliente-form" class="card" style="margin-top:20px" hidden>
+            <header class="card-header">
+              <h2 id="titulo-form-cliente">Novo Cliente</h2>
+              <p class="subtitulo">Preencha os dados para cadastro. Clientes não acessam o sistema.</p>
+            </header>
+            <div id="mensagem-cliente-form" class="mensagem-global" role="status" aria-live="polite" hidden></div>
+            <form id="form-cliente" novalidate autocomplete="off">
+              <fieldset class="form-secao">
+                <legend>Dados principais</legend>
+                <div class="campo">
+                  <label for="nome">Nome / Razão Social <span class="obrigatorio">*</span></label>
+                  <input type="text" id="nome" name="nome" maxlength="120" minlength="3" required autocomplete="off" aria-describedby="erro-nome" />
+                  <small class="erro-campo" id="erro-nome" aria-live="polite"></small>
+                </div>
+                <div class="campo">
+                  <label for="tipo-cliente">Tipo <span class="obrigatorio">*</span></label>
+                  <select id="tipo-cliente" name="tipoCliente" required aria-describedby="erro-tipo-cliente">
+                    <option value="">Selecione...</option>
+                    <option value="PF">Pessoa Física</option>
+                    <option value="PJ">Pessoa Jurídica</option>
+                  </select>
+                  <small class="erro-campo" id="erro-tipo-cliente" aria-live="polite"></small>
+                </div>
+              </fieldset>
+              <fieldset class="form-secao">
+                <legend>Documento e contato</legend>
+                <div class="campo">
+                  <label for="documento"><span id="label-documento">CPF / CNPJ</span> <span class="obrigatorio">*</span></label>
+                  <input type="text" id="documento" name="documento" maxlength="18" required inputmode="numeric" autocomplete="off" aria-describedby="erro-documento ajuda-documento" placeholder="Selecione o tipo" disabled />
+                  <small class="ajuda-campo" id="ajuda-documento">A máscara muda conforme o tipo.</small>
+                  <small class="erro-campo" id="erro-documento" aria-live="polite"></small>
+                </div>
+                <div class="campo">
+                  <label for="telefone">Telefone <span class="obrigatorio">*</span></label>
+                  <input type="tel" id="telefone" name="telefone" maxlength="15" required inputmode="tel" autocomplete="off" placeholder="(00) 00000-0000" aria-describedby="erro-telefone" />
+                  <small class="erro-campo" id="erro-telefone" aria-live="polite"></small>
+                </div>
+                <div class="campo">
+                  <label for="email">E-mail</label>
+                  <input type="email" id="email" name="email" maxlength="120" autocomplete="off" placeholder="exemplo@dominio.com" aria-describedby="erro-email" />
+                  <small class="erro-campo" id="erro-email" aria-live="polite"></small>
+                </div>
+              </fieldset>
+              <fieldset class="form-secao">
+                <legend>Endereço e observações</legend>
+                <div class="campo">
+                  <label for="endereco">Endereço</label>
+                  <input type="text" id="endereco" name="endereco" maxlength="180" autocomplete="off" />
+                </div>
+                <div class="campo">
+                  <label for="observacoes">Observações</label>
+                  <textarea id="observacoes" name="observacoes" maxlength="500" rows="3" aria-describedby="contador-observacoes"></textarea>
+                  <div class="rodape-campo">
+                    <span></span>
+                    <small class="contador" id="contador-observacoes">0/500</small>
+                  </div>
+                </div>
+              </fieldset>
+              <div class="acoes">
+                <button type="button" id="btn-cancelar-cliente" class="btn btn-secundario">Cancelar</button>
+                <button type="submit" id="btn-salvar-cliente" class="btn btn-primario">Salvar Cliente</button>
               </div>
-            </fieldset>
+            </form>
+          </div>
+        </section>
 
-            <fieldset class="form-secao">
-              <legend>Documento e contato</legend>
-
-              <div class="campo">
-                <label for="documento">
-                  <span id="label-documento">CPF / CNPJ</span>
-                  <span class="obrigatorio" aria-hidden="true">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="documento"
-                  name="documento"
-                  maxlength="18"
-                  required
-                  inputmode="numeric"
-                  autocomplete="off"
-                  aria-required="true"
-                  aria-describedby="erro-documento ajuda-documento"
-                  placeholder="Selecione o tipo de cliente"
-                  disabled
-                />
-                <small class="ajuda-campo" id="ajuda-documento">
-                  A máscara muda conforme o tipo de cliente.
-                </small>
-                <small class="erro-campo" id="erro-documento" aria-live="polite"></small>
+        <!-- ── MÓDULO: PRODUTOS ────────────────────────────────────────── -->
+        <section id="modulo-produtos" hidden>
+          <div id="card-produtos-lista" class="card">
+            <div class="card-header-row">
+              <div>
+                <h2>Produtos</h2>
+                <p class="subtitulo" style="margin-bottom:0">Catálogo de produtos e preços.</p>
               </div>
+              <button id="btn-novo-produto" class="btn btn-primario btn-sm">+ Novo Produto</button>
+            </div>
+            <div class="input-busca" style="margin:16px 0 12px">
+              <span class="input-busca-icone" aria-hidden="true">⌕</span>
+              <input id="busca-produtos" class="campo-busca" type="text" placeholder="Buscar por nome ou SKU..." autocomplete="off" />
+            </div>
+            <div id="tabela-produtos-container"></div>
+            <nav id="paginacao-produtos" class="paginacao" aria-label="Paginação de produtos"></nav>
+          </div>
 
-              <div class="campo">
-                <label for="telefone">
-                  Telefone <span class="obrigatorio" aria-hidden="true">*</span>
-                </label>
-                <input
-                  type="tel"
-                  id="telefone"
-                  name="telefone"
-                  maxlength="15"
-                  required
-                  inputmode="tel"
-                  autocomplete="off"
-                  aria-required="true"
-                  aria-describedby="erro-telefone"
-                  placeholder="(00) 00000-0000"
-                />
-                <small class="erro-campo" id="erro-telefone" aria-live="polite"></small>
+          <div id="card-produto-form" class="card" style="margin-top:20px" hidden>
+            <h2 id="titulo-form-produto">Novo Produto</h2>
+            <div id="mensagem-produto-form" class="mensagem-global" role="status" hidden></div>
+            <form id="form-produto" novalidate autocomplete="off">
+              <fieldset class="form-secao">
+                <legend>Identificação</legend>
+                <div class="campo">
+                  <label for="prod-nome">Nome <span class="obrigatorio">*</span></label>
+                  <input type="text" id="prod-nome" maxlength="120" required />
+                  <small class="erro-campo" id="erro-prod-nome"></small>
+                </div>
+                <div class="campo">
+                  <label for="prod-sku">SKU <span class="obrigatorio">*</span></label>
+                  <input type="text" id="prod-sku" maxlength="40" required autocapitalize="characters" />
+                  <small class="erro-campo" id="erro-prod-sku"></small>
+                </div>
+                <div class="campo">
+                  <label for="prod-categoria">Categoria</label>
+                  <select id="prod-categoria"><option value="">Sem categoria</option></select>
+                </div>
+                <div class="campo">
+                  <label for="prod-unit">Unidade</label>
+                  <select id="prod-unit">
+                    <option value="un">Unidade (un)</option>
+                    <option value="kg">Quilograma (kg)</option>
+                    <option value="l">Litro (l)</option>
+                    <option value="m">Metro (m)</option>
+                    <option value="cx">Caixa (cx)</option>
+                    <option value="par">Par</option>
+                  </select>
+                </div>
+              </fieldset>
+              <fieldset class="form-secao">
+                <legend>Preços e estoque</legend>
+                <div class="campo">
+                  <label for="prod-custo">Preço de custo (R$)</label>
+                  <input type="number" id="prod-custo" min="0" step="0.01" value="0" />
+                </div>
+                <div class="campo">
+                  <label for="prod-venda">Preço de venda (R$) <span class="obrigatorio">*</span></label>
+                  <input type="number" id="prod-venda" min="0" step="0.01" value="0" />
+                  <small class="erro-campo" id="erro-prod-venda"></small>
+                </div>
+                <div class="campo">
+                  <label for="prod-min-stock">Estoque mínimo</label>
+                  <input type="number" id="prod-min-stock" min="0" step="1" value="0" />
+                </div>
+              </fieldset>
+              <div class="acoes">
+                <button type="button" id="btn-cancelar-produto" class="btn btn-secundario">Cancelar</button>
+                <button type="submit" id="btn-salvar-produto" class="btn btn-primario">Salvar Produto</button>
               </div>
+            </form>
+          </div>
+        </section>
 
-              <div class="campo">
-                <label for="email">E-mail</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  maxlength="120"
-                  autocomplete="off"
-                  aria-describedby="erro-email"
-                  placeholder="exemplo@dominio.com"
-                />
-                <small class="erro-campo" id="erro-email" aria-live="polite"></small>
+        <!-- ── MÓDULO: ESTOQUE ─────────────────────────────────────────── -->
+        <section id="modulo-estoque" hidden>
+          <div id="resumo-estoque" class="resumo-cards" style="margin-bottom:20px"></div>
+          <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start">
+            <div class="card">
+              <div class="card-header-row">
+                <h2 style="margin:0">Posição de Estoque</h2>
               </div>
-            </fieldset>
-
-            <fieldset class="form-secao">
-              <legend>Endereço e observações</legend>
-
-              <div class="campo">
-                <label for="endereco">Endereço</label>
-                <input
-                  type="text"
-                  id="endereco"
-                  name="endereco"
-                  maxlength="180"
-                  autocomplete="off"
-                  aria-describedby="erro-endereco"
-                />
-                <small class="erro-campo" id="erro-endereco" aria-live="polite"></small>
+              <div class="input-busca" style="margin:12px 0">
+                <span class="input-busca-icone" aria-hidden="true">⌕</span>
+                <input id="busca-estoque" class="campo-busca" type="text" placeholder="Buscar produto..." autocomplete="off" />
               </div>
+              <div id="tabela-estoque-container"></div>
+            </div>
+            <div class="card">
+              <h2 style="margin:0 0 16px">Registrar Movimentação</h2>
+              <div id="mensagem-estoque" class="mensagem-global" role="status" hidden></div>
+              <form id="form-movimento" novalidate autocomplete="off">
+                <div class="campo">
+                  <label for="mov-produto">Produto <span class="obrigatorio">*</span></label>
+                  <select id="mov-produto"><option value="">Selecione...</option></select>
+                  <small class="erro-campo" id="erro-mov-produto"></small>
+                </div>
+                <div class="campo">
+                  <label for="mov-tipo">Tipo <span class="obrigatorio">*</span></label>
+                  <select id="mov-tipo">
+                    <option value="">Selecione...</option>
+                    <option value="IN">Entrada</option>
+                    <option value="OUT">Saída</option>
+                    <option value="ADJUST">Ajuste (define saldo)</option>
+                  </select>
+                  <small class="erro-campo" id="erro-mov-tipo"></small>
+                </div>
+                <div class="campo">
+                  <label for="mov-qty">Quantidade <span class="obrigatorio">*</span></label>
+                  <input type="number" id="mov-qty" min="1" step="1" value="" placeholder="0" />
+                  <small class="erro-campo" id="erro-mov-qty"></small>
+                </div>
+                <div class="campo">
+                  <label for="mov-motivo">Motivo</label>
+                  <input type="text" id="mov-motivo" maxlength="120" autocomplete="off" placeholder="Opcional" />
+                </div>
+                <div class="acoes" style="margin-top:16px">
+                  <button type="submit" id="btn-registrar-mov" class="btn btn-primario btn-bloco">Registrar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="card" style="margin-top:20px">
+            <h2 style="margin:0 0 12px">Histórico de Movimentações</h2>
+            <div id="tabela-movimentos-container"></div>
+          </div>
+        </section>
 
-              <div class="campo">
-                <label for="observacoes">Observações</label>
-                <textarea
-                  id="observacoes"
-                  name="observacoes"
-                  maxlength="500"
-                  rows="4"
-                  aria-describedby="contador-observacoes erro-observacoes"
-                ></textarea>
-                <div class="rodape-campo">
-                  <small class="erro-campo" id="erro-observacoes" aria-live="polite"></small>
-                  <small class="contador" id="contador-observacoes" aria-live="off">
-                    0/500
-                  </small>
+        <!-- ── MÓDULO: VENDAS (PDV) ────────────────────────────────────── -->
+        <section id="modulo-vendas" hidden>
+          <div class="pdv-layout">
+            <!-- Lado esquerdo: busca + carrinho -->
+            <div>
+              <div class="card" style="margin-bottom:16px">
+                <h2 style="margin:0 0 12px">Adicionar Item</h2>
+                <div class="input-busca">
+                  <span class="input-busca-icone" aria-hidden="true">⌕</span>
+                  <input id="busca-pdv" class="campo-busca" style="max-width:100%" type="text" placeholder="Buscar produto por nome ou SKU..." autocomplete="off" />
+                </div>
+                <div id="resultado-busca-pdv" style="margin-top:8px"></div>
+              </div>
+              <div class="card">
+                <h2 style="margin:0 0 12px">Itens da Venda</h2>
+                <div id="pdv-itens-lista" class="pdv-itens-lista">
+                  <div class="empty-state" style="padding:30px 20px">
+                    <div class="empty-state-icone">🛒</div>
+                    <p class="empty-state-desc">Nenhum item adicionado.</p>
+                  </div>
                 </div>
               </div>
-            </fieldset>
-
-            <div class="acoes">
-              <button type="button" id="btn-limpar" class="btn btn-secundario">
-                Limpar
-              </button>
-              <button type="button" id="btn-cancelar" class="btn btn-secundario">
-                Cancelar
-              </button>
-              <button type="submit" id="btn-salvar" class="btn btn-primario">
-                Salvar Cliente
-              </button>
             </div>
-          </form>
+            <!-- Lado direito: totais + pagamento -->
+            <div class="pdv-sidebar">
+              <div class="card">
+                <h2 style="margin:0 0 16px">Resumo</h2>
+                <div class="campo">
+                  <label for="pdv-cliente">Cliente (opcional)</label>
+                  <select id="pdv-cliente"><option value="">Selecione ou deixe em branco</option></select>
+                </div>
+                <div class="campo">
+                  <label for="pdv-pagamento">Forma de pagamento</label>
+                  <select id="pdv-pagamento">
+                    <option value="cash">Dinheiro</option>
+                    <option value="pix">Pix</option>
+                    <option value="debit">Débito</option>
+                    <option value="credit">Crédito</option>
+                  </select>
+                </div>
+                <div class="campo">
+                  <label for="pdv-desconto">Desconto (%)</label>
+                  <input type="number" id="pdv-desconto" min="0" max="50" step="1" value="0" />
+                </div>
+                <hr class="separador" />
+                <div class="pdv-totais">
+                  <div class="pdv-linha-total">
+                    <span>Subtotal</span><span id="pdv-subtotal" class="pdv-total-valor">R$ 0,00</span>
+                  </div>
+                  <div class="pdv-linha-total">
+                    <span>Desconto</span><span id="pdv-desconto-val" class="pdv-total-valor">R$ 0,00</span>
+                  </div>
+                  <div class="pdv-linha-total grande">
+                    <span>Total</span><span id="pdv-total" class="pdv-total-valor">R$ 0,00</span>
+                  </div>
+                </div>
+                <div id="mensagem-pdv" class="mensagem-global" style="margin-top:12px" role="status" hidden></div>
+                <div class="acoes" style="margin-top:16px;flex-direction:column">
+                  <button id="btn-confirmar-venda" class="btn btn-primario btn-bloco">Confirmar Venda</button>
+                  <button id="btn-limpar-venda" class="btn btn-ghost btn-bloco" style="margin-top:8px">Limpar</button>
+                </div>
+              </div>
+              <!-- Histórico de vendas -->
+              <div class="card" style="margin-top:16px">
+                <h2 style="margin:0 0 12px;font-size:1rem">Últimas Vendas</h2>
+                <div id="historico-vendas-container"></div>
+              </div>
+            </div>
+          </div>
         </section>
-      </main>
+
+        <!-- ── MÓDULO: RELATÓRIOS ──────────────────────────────────────── -->
+        <section id="modulo-relatorios" hidden>
+          <div id="resumo-relatorios" class="resumo-cards"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:4px">
+            <div class="card">
+              <h2 style="margin:0 0 16px;font-size:1rem">Top 10 Produtos</h2>
+              <div id="grafico-top-produtos" class="grafico-barras"></div>
+            </div>
+            <div class="card">
+              <h2 style="margin:0 0 16px;font-size:1rem">Top 10 Clientes</h2>
+              <div id="grafico-top-clientes" class="grafico-barras"></div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:20px">
+            <h2 style="margin:0 0 12px;font-size:1rem">Produtos com Estoque Crítico</h2>
+            <div id="tabela-estoque-critico"></div>
+          </div>
+        </section>
+
+      </main><!-- /#conteudo-principal -->
 
       <footer class="app-footer" role="contentinfo">
         <small>Gestão Autopeças — uso interno.</small>
       </footer>
-    </div>
-  </section>
+    </div><!-- /.app-conteudo -->
+  </section><!-- /#tela-app -->
 
   <script src="script.js" defer></script>
 </body>

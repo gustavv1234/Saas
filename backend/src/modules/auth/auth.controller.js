@@ -1,19 +1,18 @@
 'use strict';
 
 const authService = require('./auth.service');
-const { sanitizeString } = require('../../utils/sanitize');
 
-async function loginController(req, res, next) {
+async function login(req, res, next) {
   try {
-    const username = sanitizeString(req.body.username);
-    // Senha: apenas garantir que é string; não trimmar (pode ter espaços intencionais)
-    const password = typeof req.body.password === 'string' ? req.body.password : '';
-
-    const result = await authService.login(username, password);
+    const { username, password, tenantSlug } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Usuário e senha são obrigatórios.' });
+    }
+    const result = await authService.login({ username, password, tenantSlug: tenantSlug || null });
     res.json(result);
   } catch (err) {
     next(err);
   }
 }
 
-module.exports = { loginController };
+module.exports = { login };
