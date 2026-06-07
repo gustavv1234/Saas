@@ -6,10 +6,23 @@ const path = require('path');
 const { PrismaClient: MasterPrismaClient } = require('../generated/master');
 const { PrismaClient: TenantPrismaClient  } = require('../generated/tenant');
 
+// Prisma SQLite resolve file: relativo ao diretório do cliente gerado, não ao cwd.
+// Esta função garante que sempre usamos caminho absoluto.
+function _resolveFileUrl(url) {
+  if (!url) return url;
+  if (url.startsWith('file:') && !url.startsWith('file:/')) {
+    return 'file:' + path.resolve(url.slice(5));
+  }
+  return url;
+}
+
 // ── Master client — singleton ─────────────────────────────────────────────────
 let _masterClient;
 function getMasterClient() {
-  if (!_masterClient) _masterClient = new MasterPrismaClient();
+  if (!_masterClient) {
+    const url = _resolveFileUrl(process.env.MASTER_DATABASE_URL);
+    _masterClient = new MasterPrismaClient({ datasources: { db: { url } } });
+  }
   return _masterClient;
 }
 
