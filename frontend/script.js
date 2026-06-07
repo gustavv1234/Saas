@@ -356,6 +356,9 @@
       _editandoId = cliente ? cliente.id : null;
       const form = document.getElementById('form-cliente');
       if (!form) return;
+      // Garante que o botão está ativo mesmo se aberto durante carregamento anterior
+      var saveBtn = document.getElementById('btn-salvar-cliente');
+      if (saveBtn) { saveBtn.disabled = false; if (saveBtn.dataset.textoOriginal) saveBtn.textContent = saveBtn.dataset.textoOriginal; }
       form.reset();
       _limparErrosCampos(form);
       _msgEl('mensagem-cliente-form', '', '');
@@ -572,6 +575,9 @@
       _editandoId = produto ? produto.id : null;
       const form = document.getElementById('form-produto');
       if (!form) return;
+      // Garante que o botão está ativo mesmo se aberto durante carregamento anterior
+      var saveBtn = document.getElementById('btn-salvar-produto');
+      if (saveBtn) { saveBtn.disabled = false; if (saveBtn.dataset.textoOriginal) saveBtn.textContent = saveBtn.dataset.textoOriginal; }
       form.reset();
       _limparErrosCampos(form);
       _msgEl('mensagem-produto-form', '', '');
@@ -923,7 +929,7 @@
       const payload = {
         customerId:    (clienteInput && clienteInput.value) || null,
         paymentMethod: (pagInput && pagInput.value) || 'cash',
-        discount:      descPct,
+        discount:      descPct / 100,
         items: _itens.map(function (it) { return { productId: it.id, quantity: it.qty }; }),
       };
       try {
